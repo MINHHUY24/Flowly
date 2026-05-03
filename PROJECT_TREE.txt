@@ -1,0 +1,43 @@
+flowly/
+├─ client/
+│  ├─ index.html
+│  ├─ public/
+│  │  └─ assets/
+│  │     └─ images/
+│  ├─ src/
+│  │  ├─ api/
+│  │  │  ├─ apiClient.js
+│  │  │  └─ supabaseClient.js
+│  │  ├─ components/
+│  │  │  ├─ Header.jsx
+│  │  │  ├─ Sidebar.jsx
+│  │  │  ├─ TaskActionToolbar.jsx
+│  │  │  └─ TaskSearch.jsx
+│  │  ├─ hooks/
+│  │  │  └─ useBodyClass.js
+│  │  ├─ layouts/
+│  │  │  └─ ProtectedLayout.jsx
+│  │  ├─ pages/
+│  │  │  ├─ ConfirmLoginPage.jsx
+│  │  │  ├─ ForgotPasswordPage.jsx
+│  │  │  ├─ HomePage.jsx
+│  │  │  ├─ LoginPage.jsx
+│  │  │  ├─ RegisterPage.jsx
+│  │  │  ├─ SchedulePage.jsx
+│  │  │  └─ TasksPage.jsx
+│  │  ├─ styles/
+│  │  ├─ utils/
+│  │  │  └─ date.js
+│  │  ├─ App.jsx
+│  │  └─ main.jsx
+│  └─ vite.config.js
+├─ server/
+│  ├─ controllers/
+│  ├─ middleware/
+│  ├─ routes/
+│  ├─ services/
+│  ├─ utils/
+│  └─ index.js
+├─ package.json
+├─ package-lock.json
+└─ README.md
