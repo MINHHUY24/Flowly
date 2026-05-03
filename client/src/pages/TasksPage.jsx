@@ -40,9 +40,7 @@ function formatTaskDate(value, language, noDateLabel) {
 }
 
 function normalizeStatus(status) {
-  return STATUS_COLUMNS.some((column) => column.key === status)
-    ? status
-    : null;
+  return STATUS_COLUMNS.some((column) => column.key === status) ? status : null;
 }
 
 function getPriorityStarCount(priority) {
@@ -55,6 +53,7 @@ function getPriorityStarCount(priority) {
 function emptyTaskModalState() {
   return {
     open: false,
+    editingId: null,
     title: "",
     date: getDateFullKey(new Date()),
     description: "",
@@ -81,7 +80,9 @@ function AddTaskModal({ modal, onChange, onClose, onSubmit }) {
         className="task-add-modal"
         onClick={(event) => event.stopPropagation()}
       >
-        <h2 className="task-add-modal-title">{t("tasks.addTask")}</h2>
+        <h2 className="task-add-modal-title">
+          {modal.editingId ? t("tasks.editTask") : t("tasks.addTask")}
+        </h2>
 
         <form className="task-add-modal-form" onSubmit={onSubmit}>
           <div className="task-add-modal-left">
@@ -183,7 +184,7 @@ function AddTaskModal({ modal, onChange, onClose, onSubmit }) {
               </button>
 
               <button className="task-add-submit-btn" type="submit">
-                {t("common.add")}
+                {modal.editingId ? t("common.save") : t("common.add")}
               </button>
             </div>
           </div>
@@ -203,6 +204,7 @@ export default function TasksPage() {
   const [hoveredPriorityById, setHoveredPriorityById] = useState({});
 
   const boardRef = useRef(null);
+  const cardDragBlockedRef = useRef(false);
   const columnRefs = useRef({});
 
   const tasksByStatus = useMemo(() => {
@@ -274,14 +276,25 @@ export default function TasksPage() {
   }
 
   function closeAddTaskModal() {
-    setTaskModal((current) => ({
-      ...current,
-      open: false,
-      hoverPriorityLevel: 0,
-    }));
+    setTaskModal(emptyTaskModalState());
   }
 
-  async function handleAddTask(event) {
+  function openEditTaskModal(task) {
+    setTaskModal({
+      open: true,
+      editingId: task.id,
+      title: task.title || "",
+      date:
+        String(task.task_date || "").slice(0, 10) ||
+        getDateFullKey(new Date()),
+      description: task.description || "",
+      priorityLevel: getPriorityStarCount(task.priority),
+      hoverPriorityLevel: 0,
+      tagColor: task.tag_color || "orange",
+    });
+  }
+
+  async function handleSubmitTaskModal(event) {
     event.preventDefault();
 
     const title = taskModal.title.trim();
@@ -296,18 +309,29 @@ export default function TasksPage() {
     }
 
     try {
-      await apiRequest("/api/tasks", {
-        method: "POST",
-        body: JSON.stringify({
-          title,
-          description,
-          task_type: "today",
-          task_date: taskModal.date || getDateFullKey(new Date()),
-          status: "new",
-          priority: PRIORITY_BY_STAR[taskModal.priorityLevel] || "normal",
-          tag_color: taskModal.tagColor,
-        }),
-      });
+      const payload = {
+        title,
+        description,
+        task_date: taskModal.date || getDateFullKey(new Date()),
+        priority: PRIORITY_BY_STAR[taskModal.priorityLevel] || "normal",
+        tag_color: taskModal.tagColor,
+      };
+
+      if (taskModal.editingId) {
+        await apiRequest(`/api/tasks/${taskModal.editingId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await apiRequest("/api/tasks", {
+          method: "POST",
+          body: JSON.stringify({
+            ...payload,
+            task_type: "today",
+            status: "new",
+          }),
+        });
+      }
 
       closeAddTaskModal();
       await loadKanbanTasks();
@@ -513,17 +537,31 @@ export default function TasksPage() {
                       draggable
                       data-task-id={task.id}
                       key={task.id}
-                      onDragStart={() => setDraggedTaskId(task.id)}
+                      onClick={() => {
+                        if (cardDragBlockedRef.current) return;
+                        openEditTaskModal(task);
+                      }}
+                      onDragStart={() => {
+                        cardDragBlockedRef.current = true;
+                        setDraggedTaskId(task.id);
+                      }}
                       onDragEnd={() => {
                         setDraggedTaskId(null);
                         setDragOverStatus(null);
+                        window.setTimeout(() => {
+                          cardDragBlockedRef.current = false;
+                        }, 0);
                       }}
                     >
                       <button
                         className="card-delete-btn"
                         type="button"
                         aria-label={t("tasks.deleteTaskLabel")}
-                        onClick={() => handleDeleteTask(task.id)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDeleteTask(task.id);
+                        }}
+                        onMouseDown={(event) => event.stopPropagation()}
                       >
                         x
                       </button>
@@ -574,7 +612,7 @@ export default function TasksPage() {
           }))
         }
         onClose={closeAddTaskModal}
-        onSubmit={handleAddTask}
+        onSubmit={handleSubmitTaskModal}
       />
     </div>
   );

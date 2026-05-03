@@ -102,6 +102,7 @@ const resources = {
       },
       tasks: {
         addTask: "Thêm nhiệm vụ",
+        editTask: "Chỉnh sửa nhiệm vụ",
         taskName: "Tên nhiệm vụ",
         description: "Mô tả ....",
         tags: "Thẻ:",
@@ -297,6 +298,7 @@ const resources = {
       },
       tasks: {
         addTask: "Add task",
+        editTask: "Edit task",
         taskName: "Task name",
         description: "Description ....",
         tags: "Tags:",

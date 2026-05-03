@@ -76,6 +76,8 @@
 
   padding: 0 0 18px;
   scroll-behavior: smooth;
+  scrollbar-color: #2b5cc8 #eef2ff;
+  scrollbar-width: thin;
 }
 
 .kanban-board::-webkit-scrollbar {
@@ -104,6 +106,8 @@
   width: 280px;
   flex: 0 0 280px;
   min-height: 0;
+
+  position: relative;
 
   display: flex;
   flex-direction: column;
@@ -150,14 +154,16 @@
   min-height: 0;
   overflow-y: auto;
 
+  position: relative;
+  z-index: 1;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 24px;
 
-  padding: 4px 0 8px;
+  padding: 4px 8px;
 }
-
 .kanban-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -302,12 +308,26 @@
    DROP EFFECT
    ========================= */
 
-.kanban-column.drag-over .kanban-list {
-  outline: 2px dashed var(--secondary-color);
-  outline-offset: 6px;
-  border-radius: 12px;
+.kanban-column.drag-over::after {
+  content: "";
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  top: 66px;
+  bottom: 0;
+
+  border-radius: 14px;
+  background-color: rgba(50, 112, 227, 0.06);
+
+  pointer-events: none;
+  z-index: 0;
 }
 
+.kanban-column.drag-over .kanban-card {
+  position: relative;
+  z-index: 2;
+}
 /* =========================
    COLLAPSED COLUMNS
    ========================= */

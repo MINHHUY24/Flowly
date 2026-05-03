@@ -272,6 +272,7 @@ export default function Header({ user }) {
 
   const accountRef = useRef(null);
   const chatbotRef = useRef(null);
+  const chatbotInputRef = useRef(null);
 
   const displayName = getDisplayName(user);
   const email = user?.email || "minhhuy@gmail.com";
@@ -327,6 +328,10 @@ export default function Header({ user }) {
       }),
     );
   }, [language, i18n]);
+
+  useEffect(() => {
+    window.requestAnimationFrame(resizeChatbotInput);
+  }, [chatInput, chatbotOpen]);
 
   function openEditModal() {
     setProfileDraft({
@@ -440,6 +445,27 @@ export default function Header({ user }) {
   function openChatbot() {
     setChatbotOpen((current) => !current);
     setAccountOpen(false);
+  }
+
+  function resizeChatbotInput() {
+    const input = chatbotInputRef.current;
+
+    if (!input) return;
+
+    input.style.height = "auto";
+    input.style.height = `${Math.min(input.scrollHeight, 72)}px`;
+  }
+
+  function handleChatInputChange(event) {
+    setChatInput(event.target.value);
+    window.requestAnimationFrame(resizeChatbotInput);
+  }
+
+  function handleChatInputKeyDown(event) {
+    if (event.key !== "Enter" || event.shiftKey) return;
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
   }
 
   async function createTasksFromAi(result) {
@@ -627,11 +653,13 @@ export default function Header({ user }) {
               </div>
 
               <form className="chatbot-form" onSubmit={handleChatSubmit}>
-                <input
-                  type="text"
+                <textarea
+                  ref={chatbotInputRef}
                   placeholder={chatbotConfig.placeholder}
+                  rows={1}
                   value={chatInput}
-                  onChange={(event) => setChatInput(event.target.value)}
+                  onChange={handleChatInputChange}
+                  onKeyDown={handleChatInputKeyDown}
                 />
 
                 <button type="submit" disabled={chatLoading}>
