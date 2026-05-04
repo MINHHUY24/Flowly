@@ -972,6 +972,11 @@ main {
   flex-shrink: 0;
 }
 
+.sidebar-toggle,
+.sidebar-backdrop {
+  display: none;
+}
+
 .sidebar {
   width: 269px;
   height: 100%;
