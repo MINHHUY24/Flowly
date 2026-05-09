@@ -11,11 +11,64 @@ const { getHolidayMap } = require("./utils/holidays");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const clientDistPath = path.join(__dirname, "../client/dist");
 
+const clientDistPath = path.join(__dirname, "../client/dist");
+const appBasePath = normalizeBasePath(process.env.APP_BASE_PATH || "/flowly");
+
+function normalizeBasePath(value) {
+  const cleanPath = String(value || "")
+    .trim()
+    .replace(/^\/+|\/+$/g, "");
+
+  return cleanPath ? `/${cleanPath}` : "/";
+}
+
+/* =========================
+   CORS FIX FOR PRODUCTION
+========================= */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://ryanle.top",
+  "https://ryanle.top",
+  "http://www.ryanle.top",
+  "https://www.ryanle.top",
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  console.log("Request origin:", origin);
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  );
+
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  return next();
+});
+
+/* =========================
+   BODY PARSER
+========================= */
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+/* =========================
+   API ROUTES
+========================= */
 app.get("/api/config", (req, res) => {
   res.json({
     supabaseUrl: process.env.SUPABASE_URL,
@@ -38,6 +91,13 @@ app.get("/api/holidays/:year", (req, res) => {
 app.use("/api/tasks", taskRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/ai", aiRoutes);
+
+/* =========================
+   STATIC FRONTEND FALLBACK
+========================= */
+if (appBasePath !== "/") {
+  app.use(appBasePath, express.static(clientDistPath));
+}
 
 app.use(express.static(clientDistPath));
 
