@@ -15,6 +15,8 @@ const PORT = process.env.PORT || 3000;
 const clientDistPath = path.join(__dirname, "../client/dist");
 const appBasePath = normalizeBasePath(process.env.APP_BASE_PATH || "/flowly");
 
+console.log("CORS FIX VERSION is running");
+
 function normalizeBasePath(value) {
   const cleanPath = String(value || "")
     .trim()
@@ -24,7 +26,7 @@ function normalizeBasePath(value) {
 }
 
 /* =========================
-   CORS FIX FOR PRODUCTION
+   CORS
 ========================= */
 const allowedOrigins = [
   "http://localhost:5173",
@@ -37,7 +39,7 @@ const allowedOrigins = [
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  console.log("Request origin:", origin);
+  console.log("Request origin:", origin || "no-origin");
 
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -70,7 +72,7 @@ app.use(express.json());
    API ROUTES
 ========================= */
 app.get("/api/config", (req, res) => {
-  res.json({
+  return res.json({
     supabaseUrl: process.env.SUPABASE_URL,
     supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
   });
@@ -104,13 +106,15 @@ app.use(express.static(clientDistPath));
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(clientDistPath, "index.html"), (error) => {
     if (error) {
-      res.status(404).send("React build not found. Run npm run build first.");
+      return res
+        .status(404)
+        .send("React build not found. Run npm run build first.");
     }
   });
 });
 
 app.use((req, res) => {
-  res.status(404).json({
+  return res.status(404).json({
     error: "Không tìm thấy API",
   });
 });
